@@ -9,29 +9,23 @@ class handler(BaseHTTPRequestHandler):
         url_components = parse.urlparse(path)
         query = parse.parse_qs(url_components.query)
         
-        country = query.get('country')
-        capital = query.get('capital')
+        country = query.get('country', [])
+        capital = query.get('capital', [])
         
         message = ''
-        url = "https://restcountries.com/v3.1/name/"
+        base_url = "https://restcountries.com/v3.1/"
         
         try:
             if country:
-                country_name = country[0]
-                response = requests.get(f"https://restcountries.com/v3.1/name/{country_name}")
-                data = response.json()
-                capital_name = data[0]['capital'][0]
+                country_name, capital_name = self.get_country_info(base_url + "name/", country[0])
                 message = f'The capital of {country_name} is {capital_name}'
                 
             elif capital:
-                capital_name = capital[0]
-                response = requests.get(f"https://restcountries.com/v3.1/capital/{capital_name}")
-                data = response.json()
-                country_name = data[0]['name']['common']
+                capital_name, country_name = self.get_country_info(base_url + "capital/", capital[0])
                 message = f'{capital_name} is indeed the capital of {country_name}'
             
             else:
-                print("No you're wrong")
+                message = "Bad Request: Please provide a country or capital parameter."
                 
         except requests.RequestException as e:
             self.send_error(500, f"Server Error: {e}")
@@ -50,3 +44,8 @@ class handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(message.encode())
         return
+    
+    def get_country_info(self, url, name):
+        response = requests.get(url + name)
+        data = response.json()
+        return name, data[0]['capital'][0]
