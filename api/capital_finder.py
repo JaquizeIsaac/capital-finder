@@ -1,4 +1,3 @@
-# capital_finder.py
 from http.server import BaseHTTPRequestHandler
 from urllib import parse
 import requests
