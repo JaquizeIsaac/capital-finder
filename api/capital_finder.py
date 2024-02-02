@@ -1,9 +1,13 @@
+# capital_finder.py
 from http.server import BaseHTTPRequestHandler
 from urllib import parse
 import requests
 
 class handler(BaseHTTPRequestHandler):
     
+    REST_COUNTRIES_NAME = "https://restcountries.com/v3.1/name"
+    REST_COUNTRIES_API_CAPITAL = "https://restcountries.com/v3.1/capital"
+
     def do_GET(self):
         path = self.path
         url_components = parse.urlparse(path)
@@ -13,15 +17,14 @@ class handler(BaseHTTPRequestHandler):
         capital = query.get('capital', [])
         
         message = ''
-        base_url = "https://restcountries.com/v3.1/"
         
         try:
             if country:
-                country_name, capital_name = self.get_country_info(base_url + "name/", country[0])
+                country_name, capital_name = self.get_country_info(self.REST_COUNTRIES_NAME, country[0])
                 message = f'The capital of {country_name} is {capital_name}'
                 
             elif capital:
-                capital_name, country_name = self.get_country_info(base_url + "capital/", capital[0])
+                capital_name, country_name = self.get_country_info(self.REST_COUNTRIES_API_CAPITAL, capital[0])
                 message = f'{capital_name} is indeed the capital of {country_name}'
             
             else:
@@ -46,6 +49,6 @@ class handler(BaseHTTPRequestHandler):
         return
     
     def get_country_info(self, url, name):
-        response = requests.get(url + name)
+        response = requests.get(f"{url}/{name}")
         data = response.json()
         return name, data[0]['capital'][0]
